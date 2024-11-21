@@ -145,7 +145,7 @@ describe('WebTracerProvider', () => {
           //const concurrentSpan1 = webTracerWithZone.startSpan('concurrentSpan1');
           const concurrentSpan2 = webTracerWithZone.startSpan('concurrentSpan2');
     
-          await awaitDelay(20);
+          //await awaitDelay(20);
           assert.ok(
             trace.getSpan(context.active()) === rootSpan,
             'Current span is rootSpan2'
