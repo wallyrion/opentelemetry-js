@@ -24,6 +24,12 @@ import * as assert from 'assert';
 import { WebTracerConfig } from '../src';
 import { WebTracerProvider } from '../src/WebTracerProvider';
 
+const awaitDelay = (delay: number = 1000): Promise<void> => {
+  return new Promise((resolve) => {
+      setTimeout(resolve, delay);
+  });
+};
+
 describe('WebTracerProvider', () => {
   describe('constructor', () => {
     let defaultOptions: WebTracerConfig;
@@ -85,8 +91,8 @@ describe('WebTracerProvider', () => {
       );
     });
 
-    describe('when contextManager is "ZoneContextManager"', () => {
-      it('should correctly return the contexts for 2 parallel actions', done => {
+    describe('when contextManager is "ZoneContextManager multiple async operations"', () => {
+      it('should correctly return the contexts for 2 async actions', done => {
         const webTracerWithZone = new WebTracerProvider().getTracer('default');
 
         const rootSpan = webTracerWithZone.startSpan('rootSpan');
@@ -123,6 +129,78 @@ describe('WebTracerProvider', () => {
       });
     });
 
+
+    describe('when contextManager is "ZoneContextManager"', () => {
+      it('should correctly return the contexts for 2 parallel actions', async () => {
+        const webTracerWithZone = new WebTracerProvider().getTracer('default');
+    
+        const rootSpan = webTracerWithZone.startSpan('rootSpan');
+    
+        await context.with(trace.setSpan(context.active(), rootSpan), async () => {
+          assert.ok(
+            trace.getSpan(context.active()) === rootSpan,
+            'Current span is rootSpan1'
+          );
+    
+          //const concurrentSpan1 = webTracerWithZone.startSpan('concurrentSpan1');
+    
+          //await awaitDelay(20);
+          assert.ok(
+            trace.getSpan(context.active()) === rootSpan,
+            'Current span is rootSpan2'
+          );
+
+          const activeContext1 = context.active();
+          console.log('activeContext', activeContext1);
+          console.log('activeContext', JSON.stringify(activeContext1));
+
+          //await awaitDelay(20);
+          assert.ok(
+            trace.getSpan(context.active()) === rootSpan,
+            'Current span is rootSpan3'
+          );
+          const activeContext2 = context.active();
+          console.log('activeContext', activeContext2);
+
+          const concurrentSpan2 = webTracerWithZone.startSpan('concurrentSpan2');
+
+          await context.with(trace.setSpan(context.active(), concurrentSpan2),async () => {
+            await awaitDelay(20);
+            await awaitDelay(20);
+            trace.getSpan(context.active()) === concurrentSpan2,
+                'Current span is concurrentSpan2'
+
+          });
+
+          /* await Promise.all([
+            new Promise<void>((resolve) => {
+              context.with(trace.setSpan(context.active(), concurrentSpan1), () => {
+                setTimeout(() => {
+                  assert.ok(
+                    trace.getSpan(context.active()) === concurrentSpan1,
+                    'Current span is concurrentSpan1'
+                  );
+                  resolve();
+                }, 10);
+              });
+            }),
+            new Promise<void>((resolve) => {
+              context.with(trace.setSpan(context.active(), concurrentSpan2), () => {
+                setTimeout(() => {
+                  assert.ok(
+                    trace.getSpan(context.active()) === concurrentSpan2,
+                    'Current span is concurrentSpan2'
+                  );
+                  resolve();
+                }, 20);
+              });
+            }),
+          ]); */
+
+        });
+      });
+    });
+    
     describe('.startSpan()', () => {
       it('should assign resource to span', () => {
         const provider = new WebTracerProvider();
