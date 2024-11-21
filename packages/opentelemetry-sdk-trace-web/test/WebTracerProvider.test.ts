@@ -146,6 +146,12 @@ describe('WebTracerProvider', () => {
           const concurrentSpan2 = webTracerWithZone.startSpan('concurrentSpan2');
     
           await awaitDelay(20);
+          const activeContext1 = context.active();
+          console.log('activeContext', activeContext1);
+
+          await awaitDelay(20);
+          const activeContext2 = context.active();
+          console.log('activeContext', activeContext2);
     
           await Promise.all([
             new Promise<void>((resolve) => {
