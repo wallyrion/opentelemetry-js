@@ -24,6 +24,12 @@ import * as assert from 'assert';
 import { WebTracerConfig } from '../src';
 import { WebTracerProvider } from '../src/WebTracerProvider';
 
+const awaitDelay = (delay: number = 1000): Promise<void> => {
+  return new Promise((resolve) => {
+      setTimeout(resolve, delay);
+  });
+};
+
 describe('WebTracerProvider', () => {
   describe('constructor', () => {
     let defaultOptions: WebTracerConfig;
@@ -125,12 +131,12 @@ describe('WebTracerProvider', () => {
 
 
     describe('when contextManager is "ZoneContextManager"', () => {
-      it('should correctly return the contexts for 2 parallel actions', done => {
+      it('should correctly return the contexts for 2 parallel actions', async done => {
         const webTracerWithZone = new WebTracerProvider().getTracer('default');
 
         const rootSpan = webTracerWithZone.startSpan('rootSpan');
 
-        context.with(trace.setSpan(context.active(), rootSpan), () => {
+        await context.with(trace.setSpan(context.active(), rootSpan), async () => {
           assert.ok(
             trace.getSpan(context.active()) === rootSpan,
             'Current span is rootSpan'
@@ -140,6 +146,7 @@ describe('WebTracerProvider', () => {
           const concurrentSpan2 =
             webTracerWithZone.startSpan('concurrentSpan2');
 
+          await awaitDelay(20);
           context.with(trace.setSpan(context.active(), concurrentSpan1), () => {
             setTimeout(() => {
               assert.ok(
