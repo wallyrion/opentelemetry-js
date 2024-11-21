@@ -143,7 +143,7 @@ describe('WebTracerProvider', () => {
           );
     
           //const concurrentSpan1 = webTracerWithZone.startSpan('concurrentSpan1');
-          //const concurrentSpan2 = webTracerWithZone.startSpan('concurrentSpan2');
+          const concurrentSpan2 = webTracerWithZone.startSpan('concurrentSpan2');
     
           await awaitDelay(20);
           assert.ok(
@@ -155,7 +155,7 @@ describe('WebTracerProvider', () => {
           console.log('activeContext', activeContext1);
           console.log('activeContext', JSON.stringify(activeContext1));
 
-          await awaitDelay(20);
+          //await awaitDelay(20);
           assert.ok(
             trace.getSpan(context.active()) === rootSpan,
             'Current span is rootSpan3'
@@ -163,6 +163,13 @@ describe('WebTracerProvider', () => {
           const activeContext2 = context.active();
           console.log('activeContext', activeContext2);
     
+          await context.with(trace.setSpan(context.active(), concurrentSpan2),async () => {
+            await awaitDelay(20);
+            trace.getSpan(context.active()) === concurrentSpan2,
+                'Current span is concurrentSpan2'
+
+          });
+
           /* await Promise.all([
             new Promise<void>((resolve) => {
               context.with(trace.setSpan(context.active(), concurrentSpan1), () => {
