@@ -165,6 +165,7 @@ describe('WebTracerProvider', () => {
     
           await context.with(trace.setSpan(context.active(), concurrentSpan2),async () => {
             await awaitDelay(20);
+            await awaitDelay(20);
             trace.getSpan(context.active()) === concurrentSpan2,
                 'Current span is concurrentSpan2'
 
